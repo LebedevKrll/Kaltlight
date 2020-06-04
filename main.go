@@ -172,6 +172,9 @@ func handler_del(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	db, _ := sql.Open("sqlite3", "./data.db")
+	db.Exec("CREATE TABLE users (name TEXT, token TEXT);")
+	db.Exec("CREATE TABLE texts (token TEXT, title TEXT, text TEXT);")
 	http.HandleFunc("/", handler_reg)
 	http.HandleFunc("/create", handler_create)
 	http.HandleFunc("/catall", handler_catall)
