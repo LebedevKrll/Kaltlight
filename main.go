@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
 	"math/rand"
 	"net/http"
@@ -66,13 +67,17 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 
 	for index, _ := range listOfTheNames {
 		if name == listOfTheNames[index] {
-			w.Write([]byte("This name is taken"))
+			jsonText, jsonErr := json.Marshal("This name is taken")
+			checkError(jsonErr)
+			w.Write(jsonText[1 : len(jsonText)-1])
 			return
 		}
 	}
 
 	db.Exec("INSERT INTO users (name, token) VALUES (?, ?);", name, token)
-	w.Write([]byte("Welcome, " + name + "!" + " Your token is " + token))
+	jsonText, jsonErr := json.Marshal("Welcome, " + name + "!" + " Your token is " + token)
+	checkError(jsonErr)
+	w.Write(jsonText[1 : len(jsonText)-1])
 }
 
 func handlerCreate(w http.ResponseWriter, r *http.Request) {
@@ -87,11 +92,15 @@ func handlerCreate(w http.ResponseWriter, r *http.Request) {
 	for index, _ := range listOfTheTokens {
 		if token == listOfTheTokens[index] {
 			db.Exec("INSERT INTO texts (token, title, text) VALUES (?, ?, ?);", token, title, text)
-			w.Write([]byte("File was created"))
+			jsonText, jsonErr := json.Marshal("File was created")
+			checkError(jsonErr)
+			w.Write(jsonText[1 : len(jsonText)-1])
 			return
 		}
 	}
-	w.Write([]byte("Invalid token"))
+	jsonText, jsonErr := json.Marshal("Invalid token")
+	checkError(jsonErr)
+	w.Write(jsonText[1 : len(jsonText)-1])
 	return
 }
 
@@ -109,14 +118,20 @@ func handlerShowFiles(w http.ResponseWriter, r *http.Request) {
 			checkError(err)
 			listOfTheTitles := listFromSql(titles, err)
 
-			w.Write([]byte("These are your files: "))
+			jsonText, jsonErr := json.Marshal("These are your files: ")
+			checkError(jsonErr)
+			w.Write(jsonText[1 : len(jsonText)-1])
 			for _, title := range listOfTheTitles {
-				w.Write([]byte(title + " "))
+				jsonText, jsonErr := json.Marshal(title + " ")
+				checkError(jsonErr)
+				w.Write(jsonText[1 : len(jsonText)-1])
 			}
 			return
 		}
 	}
-	w.Write([]byte("Invalid token"))
+	jsonText, jsonErr := json.Marshal("Invalid token")
+	checkError(jsonErr)
+	w.Write(jsonText[1 : len(jsonText)-1])
 	return
 
 }
@@ -143,18 +158,26 @@ func handlerShowText(w http.ResponseWriter, r *http.Request) {
 					checkError(err)
 					listOfTheTexts := listFromSql(texts, err)
 
-					w.Write([]byte("Text of the file is: "))
-					for _, value := range listOfTheTexts {
-						w.Write([]byte(value))
+					jsonText, jsonErr := json.Marshal("Text of the file is: ")
+					checkError(jsonErr)
+					w.Write(jsonText[1 : len(jsonText)-1])
+					for _, text := range listOfTheTexts {
+						jsonText, jsonErr := json.Marshal(text)
+						checkError(jsonErr)
+						w.Write(jsonText[1 : len(jsonText)-1])
 					}
 					return
 				}
 			}
-			w.Write([]byte("Invalid title"))
+			jsonText, jsonErr := json.Marshal("Invalid title")
+			checkError(jsonErr)
+			w.Write(jsonText[1 : len(jsonText)-1])
 			return
 		}
 	}
-	w.Write([]byte("Invalid token."))
+	jsonText, jsonErr := json.Marshal("Invalid token")
+	checkError(jsonErr)
+	w.Write(jsonText[1 : len(jsonText)-1])
 	return
 
 }
@@ -177,15 +200,21 @@ func handlerDelete(w http.ResponseWriter, r *http.Request) {
 			for index, _ = range listOfTheTitles {
 				if title == listOfTheTitles[index] {
 					db.Exec("DELETE FROM texts WHERE texts.title = ? AND texts.token = ?;", title, token)
-					w.Write([]byte("File was deleted."))
+					jsonText, jsonErr := json.Marshal("File was deleted")
+					checkError(jsonErr)
+					w.Write(jsonText[1 : len(jsonText)-1])
 					return
 				}
 			}
-			w.Write([]byte("Invalid title."))
+			jsonText, jsonErr := json.Marshal("Invalid title")
+			checkError(jsonErr)
+			w.Write(jsonText[1 : len(jsonText)-1])
 			return
 		}
 	}
-	w.Write([]byte("Invalid token."))
+	jsonText, jsonErr := json.Marshal("Invalid token")
+	checkError(jsonErr)
+	w.Write(jsonText[1 : len(jsonText)-1])
 	return
 
 }
