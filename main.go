@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -23,11 +24,25 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func listFromSql(values *sql.Rows, err error) []string {
-
+func checkError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		if _, osErr := os.Stat("./log.txt"); osErr == nil {
+			f, _ := os.OpenFile("./log.txt", os.O_APPEND|os.O_WRONLY, 0600)
+			f.WriteString(time.Now().String()[:19] + " " + err.Error() + "\n")
+			f.Close()
+			log.Fatal(err)
+		} else {
+			newFile, _ := os.Create("./log.txt")
+			newFile.WriteString(time.Now().String()[:19] + " " + err.Error() + "\n")
+			newFile.Close()
+			log.Fatal(err)
+		}
 	}
+	return
+}
+
+func listFromSql(values *sql.Rows, err error) []string {
+	checkError(err)
 
 	list := []string{}
 	var id string
@@ -46,6 +61,7 @@ func handlerRegister(w http.ResponseWriter, r *http.Request) {
 	rand.Seed(time.Now().UnixNano())
 	token := randSeq(25)
 	names, err := db.Query("SELECT name FROM users")
+	checkError(err)
 	listOfTheNames := listFromSql(names, err)
 
 	for index, _ := range listOfTheNames {
@@ -65,6 +81,7 @@ func handlerCreate(w http.ResponseWriter, r *http.Request) {
 	text := r.URL.Query().Get("text")
 
 	tokens, err := db.Query("SELECT token FROM users")
+	checkError(err)
 	listOfTheTokens := listFromSql(tokens, err)
 
 	for index, _ := range listOfTheTokens {
@@ -82,12 +99,14 @@ func handlerShowFiles(w http.ResponseWriter, r *http.Request) {
 	token := r.URL.Query().Get("token")
 
 	tokens, err := db.Query("SELECT token FROM users")
+	checkError(err)
 	listOfTheTokens := listFromSql(tokens, err)
 
 	for index, _ := range listOfTheTokens {
 		if token == listOfTheTokens[index] {
 
 			titles, err := db.Query("SELECT title FROM texts WHERE texts.token = ?;", token)
+			checkError(err)
 			listOfTheTitles := listFromSql(titles, err)
 
 			w.Write([]byte("These are your files: "))
@@ -107,18 +126,21 @@ func handlerShowText(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
 
 	tokens, err := db.Query("SELECT token FROM users")
+	checkError(err)
 	listOfTheTokens := listFromSql(tokens, err)
 
 	for index, _ := range listOfTheTokens {
 		if token == listOfTheTokens[index] {
 
 			titles, err := db.Query("SELECT title FROM texts WHERE texts.token = ?;", token)
+			checkError(err)
 			listOfTheTitles := listFromSql(titles, err)
 
 			for index, _ = range listOfTheTitles {
 				if title == listOfTheTitles[index] {
 
 					texts, err := db.Query("SELECT text FROM texts WHERE texts.title = ? AND texts.token = ?;", title, token)
+					checkError(err)
 					listOfTheTexts := listFromSql(texts, err)
 
 					w.Write([]byte("Text of the file is: "))
@@ -142,12 +164,14 @@ func handlerDelete(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Query().Get("title")
 
 	tokens, err := db.Query("SELECT token FROM users")
+	checkError(err)
 	listOfTheTokens := listFromSql(tokens, err)
 
 	for index, _ := range listOfTheTokens {
 		if token == listOfTheTokens[index] {
 
 			titles, err := db.Query("SELECT title FROM texts WHERE texts.token = ?;", token)
+			checkError(err)
 			listOfTheTitles := listFromSql(titles, err)
 
 			for index, _ = range listOfTheTitles {
